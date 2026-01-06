@@ -12,16 +12,23 @@ labels:
 
 images:
   - name: docker.io/postgres
-    newTag: "16-test"
+    newTag: "16"
 
 patches:
   - patch: |-
       - op: replace
         path: /spec/volumeClaimTemplates/0/spec/resources/requests/storage
-        value: 2Gi
+        value: 10Gi
     target:
       kind: StatefulSet
       name: poc-postgres
+  - patch: |-
+      - op: replace
+        path: /spec/resources/requests/storage
+        value: 5Gi
+    target:
+      kind: PersistentVolumeClaim
+      name: poc-postgres-backup
   - patch: |-
       apiVersion: apps/v1
       kind: StatefulSet
@@ -36,9 +43,22 @@ patches:
               vault.hashicorp.com/agent-inject-secret-db: "secret/data/poc/db"
               vault.hashicorp.com/agent-inject-template-db: |
                 {{- with secret "secret/data/poc/db" -}}
-                export DB_PASSWORD="{{ .Data.data.password }}"
-                export DB_USERNAME="{{ .Data.data.username }}"
+                export POSTGRES_PASSWORD="{{ .Data.data.password }}"
+                export POSTGRES_USER="{{ .Data.data.username }}"
+                export POSTGRES_DB="poc_database"
+                export PGDATA="/var/lib/postgresql/data/pgdata"
                 {{- end }}
+          spec:
+            containers:
+            - name: postgres
+              # Overriding command to source Vault secrets before Postgres starts
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  if [ -f /vault/secrets/db ]; then
+                    . /vault/secrets/db
+                  fi
+                  exec docker-entrypoint.sh postgres
     target:
       kind: StatefulSet
       name: poc-postgres
