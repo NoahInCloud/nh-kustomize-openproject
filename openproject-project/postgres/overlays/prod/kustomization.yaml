@@ -48,13 +48,17 @@ patches:
                 export POSTGRES_DB="poc_database"
                 {{- end }}
           spec:
-            containers:
-            - name: postgres
-              command: ["/bin/sh", "-c"]
-              args:
-                - |
-                  source /vault/secrets/db && 
-                  exec docker-entrypoint.sh postgres
+              containers:
+                  - name: postgres
+                    command: ["/bin/sh", "-c"]
+                    args:
+                      - |
+                        # Wait for the file to exist, then use '.' instead of 'source'
+                        if [ -f /vault/secrets/db ]; then
+                          . /vault/secrets/db
+                        fi
+                        exec docker-entrypoint.sh postgres
+
     target:
       kind: StatefulSet
       name: poc-postgres
