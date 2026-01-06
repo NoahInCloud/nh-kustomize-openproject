@@ -10,6 +10,10 @@ labels:
   - pairs:
       environment: production
 
+images:
+  - name: docker.io/bitnami/memcached
+    newTag: prod
+
 patches:
   - patch: |-
       - op: replace

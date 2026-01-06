@@ -10,6 +10,10 @@ labels:
   - pairs:
       environment: production
 
+images:
+  - name: docker.io/postgres
+    newTag: "16-prod"
+
 patches:
   - patch: |-
       - op: replace
