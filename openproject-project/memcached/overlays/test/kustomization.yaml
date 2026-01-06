@@ -11,7 +11,7 @@ labels:
       environment: test
 
 images:
-  - name: docker.io/bitnami/memcached
+  - name: docker.io/memcached
     newTag: test
 
 patches:
