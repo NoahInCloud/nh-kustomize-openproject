@@ -49,7 +49,7 @@ spec:
       serviceAccountName: poc-memcached
       containers:
         - name: memcached
-          image: docker.io/bitnami/memcached:latest
+          image: docker.io/memcached:latest
           ports:
             - containerPort: 11211
               name: memcache
