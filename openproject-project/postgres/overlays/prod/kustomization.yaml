@@ -30,32 +30,31 @@ patches:
       kind: PersistentVolumeClaim
       name: poc-postgres-backup
   - patch: |-
-        apiVersion: apps/v1
-        kind: StatefulSet
-        metadata:
-          name: poc-postgres
-        spec:
-          template:
-            metadata:
-              annotations:
-                vault.hashicorp.com/agent-inject: "true"
-                vault.hashicorp.com/role: "poc-role"
-                vault.hashicorp.com/agent-inject-secret-db: "secret/data/poc/db"
-                # We map Vault keys to the specific env vars Postgres expects
-                vault.hashicorp.com/agent-inject-template-db: |
-                  {{- with secret "secret/data/poc/db" -}}
-                  export POSTGRES_PASSWORD="{{ .Data.data.password }}"
-                  export POSTGRES_USER="{{ .Data.data.username }}"
-                  export POSTGRES_DB="poc_database"
-                  {{- end }}
-            spec:
-              containers:
-              - name: postgres
-                command: ["/bin/sh", "-c"]
-                args:
-                  - |
-                    source /vault/secrets/db && 
-                    exec docker-entrypoint.sh postgres
-      target:
-        kind: StatefulSet
+      apiVersion: apps/v1
+      kind: StatefulSet
+      metadata:
         name: poc-postgres
+      spec:
+        template:
+          metadata:
+            annotations:
+              vault.hashicorp.com/agent-inject: "true"
+              vault.hashicorp.com/role: "poc-role"
+              vault.hashicorp.com/agent-inject-secret-db: "secret/data/poc/db"
+              vault.hashicorp.com/agent-inject-template-db: |
+                {{- with secret "secret/data/poc/db" -}}
+                export POSTGRES_PASSWORD="{{ .Data.data.password }}"
+                export POSTGRES_USER="{{ .Data.data.username }}"
+                export POSTGRES_DB="poc_database"
+                {{- end }}
+          spec:
+            containers:
+            - name: postgres
+              command: ["/bin/sh", "-c"]
+              args:
+                - |
+                  source /vault/secrets/db && 
+                  exec docker-entrypoint.sh postgres
+    target:
+      kind: StatefulSet
+      name: poc-postgres
